@@ -1,61 +1,55 @@
-import os
+import cv2
 import numpy as np
-from scipy import misc
+import pickle
+import os
 
-# 给我个路径我要创建文件呢
-def makfile(path):
-    isExists = os.path.exists(path)
-    if not isExists:
-        os.makedirs(path)
 
-# 解压数据呢
+# 解压缩，返回解压后的字典
 def unpickle(file):
-    import _pickle
-    with open(file, 'rb') as fo:
-        dict = _pickle.load(fo, encoding='bytes')
+    fo = open(file, 'rb')
+    dict = pickle.load(fo, encoding='latin1')
+    fo.close()
     return dict
 
-# 给定路径添加数据呢
-def Dealdata(adata, bdata, train=1, path='C:'):
-    for aa, bb, c, d in zip(bdata[b'filenames'], bdata[b'fine_labels'], bdata[b'coarse_labels'], bdata[b'data']):
-        print(adata[b'fine_label_names'][bb], adata[b'coarse_label_names'][c])
-        if train:
-            heng = os.path.join(path, 'train')
-        else:
-            heng = os.path.join(path, 'test')
 
-        coarse_label_names = adata[b'coarse_label_names'][c]
-        fine_label_names = adata[b'fine_label_names'][bb]
-        # 路径已经准备好了
-        path1 = os.path.join(heng, str(coarse_label_names, 'utf-8'))
-        path2 = os.path.join(path1, str(fine_label_names, 'utf-8'))
-        makfile(path2)
-        path3 = os.path.join(path2, str(aa, 'utf-8'))
+def cifar100_to_images():
+    tar_dir = '../data/cifar-100-python/'  # 原始数据库目录
+    train_root_dir = './train/'  # 图片保存目录
+    test_root_dir = './test/'
+    if not os.path.exists(train_root_dir):
+        os.makedirs(train_root_dir)
+    if not os.path.exists(test_root_dir):
+        os.makedirs(test_root_dir)
 
-        # 再来一波data的数据呢
-        picdata1 = np.reshape(d, (3, 32, 32))
-        picdata = np.transpose(picdata1, (1, 2, 0))
-        misc.imsave(path3, picdata)
+    # 获取label对应的class，分为20个coarse class，共100个 fine class
+    meta_Name = tar_dir + "meta"
+    Meta_dic = unpickle(meta_Name)
+    coarse_label_names = Meta_dic['coarse_label_names']
+    fine_label_names = Meta_dic['fine_label_names']
+    print(fine_label_names)
 
+    # 生成训练集图片，如果需要png格式，只需要改图片后缀名即可。
+    dataName = tar_dir + "train"
+    Xtr = unpickle(dataName)
+    print(dataName + " is loading...")
+    for i in range(0, Xtr['data'].shape[0]):
+        img = np.reshape(Xtr['data'][i], (3, 32, 32))  # Xtr['data']为图片二进制数据
+        img = img.transpose(1, 2, 0)  # 读取image
+        ###img_name:fine_label+coarse_label+fine_class+coarse_class+index
+        picName = train_root_dir + str(Xtr['fine_labels'][i]) + '_' + str(Xtr['coarse_labels'][i]) + '_&' + \
+                  fine_label_names[Xtr['fine_labels'][i]] + '&_' + coarse_label_names[
+                      Xtr['coarse_labels'][i]] + '_' + str(i) + '.jpg'
+        cv2.imwrite(picName, img)
+    print(dataName + " loaded.")
 
-
-# 解压后meta的路径
-metapath = '../data/cifar-100-python/meta'
-# 解压后test的路径
-testpath = '../data/cifar-100-python/test'
-# 解压后train的路径
-trainpath = '../data/cifar-100-python/train'
-# 存放图片的路径
-storepicpath = '../data/cifar-100-python/'
-
-a = unpickle(metapath)
-b = unpickle(testpath)
-c = unpickle(trainpath)
-# 测试
-Dealdata(a, b, train=0, path=storepicpath)
-# 训练
-Dealdata(a, c, train=1, path=storepicpath)
-
-
-
-
+    print("test_batch is loading...")
+    # 生成测试集图片
+    testXtr = unpickle(tar_dir + "test")
+    for i in range(0, testXtr['data'].shape[0]):
+        img = np.reshape(testXtr['data'][i], (3, 32, 32))
+        img = img.transpose(1, 2, 0)
+        picName = test_root_dir + str(testXtr['fine_labels'][i]) + '_' + str(testXtr['coarse_labels'][i]) + '_&' + \
+                  fine_label_names[testXtr['fine_labels'][i]] + '&_' + coarse_label_names[
+                      testXtr['coarse_labels'][i]] + '_' + str(i) + '.jpg'
+        cv2.imwrite(picName, img)
+    print("test_batch loaded.")

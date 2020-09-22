@@ -67,6 +67,7 @@ python ./DLG.py --index num (你想要还原的图片在数据集的下标) --da
 > extracted_cifar100文件夹：里面存储了解压cifar100数据集的代码，运行即可解压cifar100数据集
 >
 > 可以解压后查看数据集下标
+>cifar10解压文件夹中需要创建一个空的test和train，以便于程序不会报错
 
 
 

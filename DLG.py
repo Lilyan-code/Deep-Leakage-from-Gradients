@@ -88,6 +88,12 @@ def weights_init(m):
         print('warning: failed in weights_init for %s.bias' % m._get_name())
 
 def main():
+    seed = 1234 # 经过专家的实验， 随机种子数为1234结果会较好
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
     dataset = args.dataset # 获得命令行输入的dataset
     root_path = '.'
     data_path = os.path.join(root_path, './data').replace('\\', '/')  # 指定数据存放的路径地址， replace是进行转义
@@ -223,12 +229,12 @@ def main():
                 for imidx in range(num_dummy): # 这个循环是迭代有多少张图片输入
                     plt.figure(figsize=(12, 8)) # plt.figure(figsize=())让图画在画布上， 并且使用figsize指定画布的大小（传入参数为元组）
                     plt.subplot(3, 10, 1) # 在figure画布上画子图的意思
-                    plt.imshow(tp(gt_data[imidx].cpu())) # 这一行是显示真实图片的意思, 如果是mnist数据集，将这一行改为如下
-                    # plt.imshow(tp(gt_data[imidx].cpu()), cmap='gray') # 灰度图像
+                    # plt.imshow(tp(gt_data[imidx].cpu())) # 这一行是显示真实图片的意思, 如果是mnist数据集，将这一行改为如下
+                    plt.imshow(tp(gt_data[imidx].cpu()), cmap='gray') # 灰度图像
                     for i in range(min(len(history), 29)): # 这一行是迭代画出子图的意思
                         plt.subplot(3, 10, i + 2)
-                        plt.imshow(history[i][imidx]) # 在figure显示history存储假的图片数据
-                        # plt.imshow(history[i][imidx], cmap='gray') # 显示灰度图像
+                        # plt.imshow(history[i][imidx]) # 在figure显示history存储假的图片数据
+                        plt.imshow(history[i][imidx], cmap='gray') # 显示灰度图像
                         plt.title('iter=%d' % (history_iters[i])) # 第几次迭代
                         plt.axis('off')
 
